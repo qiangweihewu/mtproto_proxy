@@ -16,7 +16,7 @@ usage() {
     echo "Parameters:"
     echo "-p <port>: port to listen on. ${process.env.PORT || 3927}
     echo "-s <secret>: proxy secret. 32 hex characters 0-9 a-f"
-    echo "-a dd: only allow 'secure' connections (with dd-secret) / fake-tls connections (base64 secrets)"
+    echo "-a dd: only allow 'secure' connections (with dd-secret)/ fake-tls connections (base64 secrets)"
     echo "-a tls: only allow 'fake-tls' connections (base64 secrets)"
     echo "It's ok to provide both '-a dd -a tls'."
     echo "port, secret and allowed protocols can also be configured via environment variables:"
