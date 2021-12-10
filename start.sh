@@ -10,18 +10,17 @@ usage() {
     echo "To run with settings from config/prod-sys.config:"
     echo "${THIS}"
     echo "To start in single-port mode configured from command-line:"
-    echo "${THIS} -p <port> -s <secret> -t <ad tag>"
+    echo "${THIS} -p <port> -s <secret> "
     echo "To only allow connections with randomized protocol (dd-secrets):"
     echo "${THIS} -a dd"
     echo "Parameters:"
-    echo "-p <port>: port to listen on. 1-65535"
+    echo "-p <port>: port to listen on. ${process.env.PORT || 3927}
     echo "-s <secret>: proxy secret. 32 hex characters 0-9 a-f"
-    echo "-t <ad tag>: promo tag that you get from @MTProxybot. 32 hex characters"
     echo "-a dd: only allow 'secure' connections (with dd-secret) / fake-tls connections (base64 secrets)"
     echo "-a tls: only allow 'fake-tls' connections (base64 secrets)"
     echo "It's ok to provide both '-a dd -a tls'."
-    echo "port, secret, tag and allowed protocols can also be configured via environment variables:"
-    echo "MTP_PORT, MTP_SECRET, MTP_TAG, MTP_DD_ONLY, MTP_TLS_ONLY"
+    echo "port, secret and allowed protocols can also be configured via environment variables:"
+    echo "PORT, MTP_SECRET, MTP_TAG, MTP_DD_ONLY, MTP_TLS_ONLY"
     echo "If both command line and environment are set, command line have higher priority."
 }
 
@@ -32,9 +31,8 @@ error() {
 }
 
 # check environment variables
-PORT=${MTP_PORT:-""}
+PORT=${process.env.PORT || 3927}
 SECRET=${MTP_SECRET:-""}
-TAG=${MTP_TAG:-""}
 DD_ONLY=${MTP_DD_ONLY:-""}
 TLS_ONLY=${MTP_TLS_ONLY:-""}
 
@@ -46,9 +44,6 @@ while getopts "p:s:t:a:dh" o; do
             ;;
         s)
             SECRET=${OPTARG}
-            ;;
-        t)
-            TAG=${OPTARG}
             ;;
         a)
             if [ "${OPTARG}" = "dd" ]; then
@@ -80,10 +75,10 @@ elif [ -n "${TLS_ONLY}" ]; then
 fi
 
 # if at least one option is set...
-if [ -n "${PORT}" -o -n "${SECRET}" -o -n "${TAG}" ]; then
+if [ -n "${PORT}" -o -n "${SECRET}" ]; then
     # If at least one of them not set...
-    [ -z "${PORT}" -o -z "${SECRET}" -o -z "${TAG}" ] && \
-        error "Not enough options: -p '${PORT}' -s '${SECRET}' -t '${TAG}'"
+    [ -z "${PORT}" -o -z "${SECRET}" ] && \
+        error "Not enough options: -p '${PORT}' -s '${SECRET}'"
 
     # validate format
     [ ${PORT} -gt 0 -a ${PORT} -lt 65535 ] || \
@@ -93,7 +88,7 @@ if [ -n "${PORT}" -o -n "${SECRET}" -o -n "${TAG}" ]; then
     [ -n "`echo $TAG | grep -x '[[:xdigit:]]\{32\}'`" ] || \
         error "Invalid tag. Should be 32 chars of 0-9 a-f"
 
-    exec $CMD $PROTO_ARG -mtproto_proxy ports "[#{name => mtproto_proxy, port => $PORT, secret => <<\"$SECRET\">>, tag => <<\"$TAG\">>}]"
+    exec $CMD $PROTO_ARG -mtproto_proxy ports "[#{name => mtproto_proxy, port => $PORT, secret => <<\"$SECRET\">>}]"
 else
     exec $CMD $PROTO_ARG
 fi
